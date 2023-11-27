@@ -77,8 +77,10 @@ class Table:
     def insert_table(self, entry):
         self.table.append(entry)
 
-    def update(self, key, new_val):
-        self.table[0][key] = new_val
+    def update(self, user_id, key, new_value):
+        for data in self.table:
+            if data['ID'] == user_id:
+                data[key] = new_value
 
     def __str__(self):
         return f"{self.table_name} : {self.table}"
