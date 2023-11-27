@@ -1,7 +1,8 @@
 # Proposal
-
-### Project Evaluation
 This proposal outlines the steps for evaluating senior projects. 
+### Project Evaluation
+If you are logged in as a faculty or an advisor, there will be a list of the projects that are waiting for evaluation and some of the project's details.
+These are the program for the evaluation steps.
 
 **1. Notify the evaluators:**
 The system sends a message to the evaluators that is not assigned, telling them about the project they can review. The project waiting for response will be added to the waiting list.
