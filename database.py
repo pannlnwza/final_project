@@ -28,11 +28,7 @@ class DB:
                 return table
         return None
 
-    def get_tables(self):
-        tables_dict = {}
-        for table in self.database:
-            tables_dict[table.table_name] = table
-        return tables_dict
+
 
 
 class Table:
@@ -77,10 +73,14 @@ class Table:
     def insert_table(self, entry):
         self.table.append(entry)
 
-    def update(self, user_id, key, new_value):
+    def update(self, check_key, check_val, key, new_value):
         for data in self.table:
-            if data['ID'] == user_id:
+            if data[check_key] == check_val:
                 data[key] = new_value
+
+
 
     def __str__(self):
         return f"{self.table_name} : {self.table}"
+
+
