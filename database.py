@@ -28,8 +28,19 @@ class DB:
                 return table
         return None
 
+    def get_all_table(self):
+        return [table.table_name for table in self.database]
 
+    def get_table_data(self, table_name):
+        for table in self.database:
+            if table.table_name == table_name:
+                return table.table
+        return None
 
+    def get_table_column(self, table_name):
+        for table in self.database:
+            if table.table_name == table_name:
+                return list(table.table[0].keys())
 
 class Table:
     def __init__(self, table_name, table):
@@ -73,12 +84,15 @@ class Table:
     def insert_table(self, entry):
         self.table.append(entry)
 
-    def update(self, check_key, check_val, key, new_value):
+    def update(self, check_key, check_val, check2_key, check2_val, key, new_value):
+        for data in self.table:
+            if data[check_key] == check_val and data[check2_key] == check2_val:
+                data[key] = new_value
+
+    def update2(self, check_key, check_val, key, new_value):
         for data in self.table:
             if data[check_key] == check_val:
                 data[key] = new_value
-
-
 
     def __str__(self):
         return f"{self.table_name} : {self.table}"
