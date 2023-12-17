@@ -114,9 +114,11 @@ class Student:
                 else:
                     print('This group is already full.')
                     return
+
             member_pending.update('ProjectID', project, 'to_be_member', self.id, 'Response', 'Accepted')
             member_pending.update('ProjectID', project, 'to_be_member', self.id, 'Response_date', datetime.today())
             save('member_pending_request')
+
             other_group_invite = member_pending.filter(lambda x: x['ProjectID'] != project
                                                        and x['to_be_member'] == self.id)
             for i in range(len(other_group_invite.table)):  # Automatically deny other invitations
@@ -155,7 +157,7 @@ class Student:
         save('persons')
         _project_id = ''
         self.role = 'lead'
-        for i in range(6):
+        for i in range(6):  # Create a random number for ProjectID
             num = str(random.randint(0, 9))
             _project_id += num
         project = {'ProjectID': _project_id,
@@ -192,7 +194,6 @@ class Member:
         """
         Display details of the member's project.
         """
-
         for i in range(len(project_table.filter(lambda x: x['ProjectID'] == self.project_id).table)):
             for key, value in project_table.filter(lambda x: x['ProjectID'] == self.project_id).table[i].items():
                 print(f'{key}: {value}')
@@ -258,6 +259,7 @@ class Lead:
         if other_group:
             print(f'This student (ID: {new_member_id}) is already a member of another group.')
             return  # Return if the invited user is already in another group
+
         for i in range(len(member_pending.table)):
             for inv in member_pending.filter(lambda x: x['ProjectID'] == self.project_id).table:
                 if myproject[0]['Member1'] != '-' and myproject[0]['Member2'] != '-':
@@ -290,6 +292,7 @@ class Lead:
         new_advisor_id = input('Who do you want to invite?(ID): ')
         if new_advisor_id == 'BACK':
             return
+
         check_faculty = login_table.filter(lambda x: x['ID'] == new_advisor_id).select('role')
         if check_faculty[0]['role'] != 'faculty':
             print(f'This user (ID: {new_advisor_id}) is not a faculty member. Please try again.')
@@ -299,6 +302,7 @@ class Lead:
         if other_group:
             print(f'This faculty (ID: {new_advisor_id}) is already a member of another group.')
             return  # Return if the invited user is already in another group
+
         for i in range(len(advisor_pending.table)):
             for inv in advisor_pending.filter(lambda x: x['ProjectID'] == self.project_id).table:
                 if myproject[0]['Advisor'] != '-':
@@ -411,6 +415,7 @@ class Faculty:
                     advisor_pending.update('ProjectID', project, 'to_be_advisor',
                                            self.id, 'Response_date', datetime.today())
                     save('advisor_pending_request')
+
                     other_group_invite = member_pending.filter(lambda x: x['ProjectID'] != project
                                                                and x['to_be_advisor'] == self.id)
                     for index in range(len(other_group_invite.table)):  # Automatically deny other invitations
@@ -420,6 +425,7 @@ class Faculty:
                         advisor_pending.update('ProjectID', other_project_id, 'to_be_advisor', self.id, 'Response_date',
                                                datetime.today())
                         save('advisor_pending_request')
+
                     login_table.update('ID', self.id, 'username', self.user, 'role', 'advisor')
                     person_table.update2('ID', self.id, 'type', 'advisor')
                     save('login')
@@ -460,11 +466,13 @@ class Faculty:
             print(project_table.filter(lambda x: x['Status'] == 'sent')
                   .filter(lambda x: x["Evaluator"] == '-').table[i])
         print()
+
         if project_table.filter(lambda x: x['Status'] == 'sent').filter(lambda x: x["Evaluator"] == '-').table:
             print('Enter "BACK" if you want to go back to previous page!')
             choose_project = input('Choose the project to respond (ProjectID): ')
             if choose_project == 'BACK':
                 return
+
             # Update Evaluator of the project in the CSV file
             project_table.update2('ProjectID', choose_project, 'Evaluator', self.id)
             save('project')
@@ -533,7 +541,6 @@ class Advisor:
                 project_table.update2('ProjectID', self.project_id, 'Approval', 'disapproved')
                 save('project')
                 print(f'You disapproved the project ({self.project_id}).')
-
         else:
             print("The project hasn't passed the evaluation yet.")
 
@@ -548,6 +555,7 @@ class Advisor:
             print(project_table.filter(lambda x: x['Status'] == 'sent')
                   .filter(lambda x: x["Evaluator"] == '-').table[i])
         print()
+
         if project_table.filter(lambda x: x['Status'] == 'sent').filter(lambda x: x["Evaluator"] == '-').table:
             print('Enter "BACK" if you want to go back to previous page!')
             choose_project = input('Choose the project to respond (ProjectID): ')
@@ -616,6 +624,7 @@ class Admin:
                            '0. Go back to previous page\n'
                            'Choose a number 1,2 and 0: ')
             print()
+
             if choice == '1':
                 first = input('Input first name: ')
                 last = input('Input last name: ')
@@ -653,7 +662,6 @@ class Admin:
                 save('login')
                 save('project')
                 break
-
             else:
                 print('Invalid choice. Please choose the valid choices (1,2 and 0)')
 
@@ -667,7 +675,6 @@ advisor_pending = main_db.search('advisor_pending_request') # Advisor pending ta
 project_table = main_db.search('project')   # Project table
 user_id = login_table.filter(lambda x: x['username'] == val[0]).select('ID')    # Search for the user's ID
 
-# The code below this line is a role-based function.
 if val[1] == 'admin':
     admin_user = Admin(user_id[0]['ID'], val[0], val[1])
     while True:
@@ -877,4 +884,4 @@ elif val[1] == 'faculty':
         else:
             print('Invalid choice. Please choose the valid choices (1,2,3,4 and 0)')
 
-exit()  # Once everything is done the exit() function is called to save the CSV files and exit the program
+exit()
