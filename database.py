@@ -3,44 +3,70 @@ import copy
 
 
 class CSVReader:
+    """
+    Class for reading data from a CSV file.
+    """
+
     def __init__(self, input_file):
         self.input_file = input_file
 
     def read_csv(self):
+        """
+        Read data from the CSV file and convert it into a list of dictionaries.
+        """
         temp = []
         with open(self.input_file) as f:
             rows = csv.DictReader(f)
             for r in rows:
                 temp.append(dict(r))
-        return temp
+        return temp   # Returns a list of dict where each dict represents a row from the CSV file.
 
 
 class DB:
+    """
+    Database class to store and manage tables.
+    """
     def __init__(self):
         self.database = []
 
     def insert(self, table):
+        """
+        Insert a table into the database.
+        """
         self.database.append(table)
 
     def search(self, table_name):
+        """
+        Search for a table in the database based on its name.
+        """
         for table in self.database:
             if table.table_name == table_name:
                 return table
-        return None
+        return None    # Returns the table with the specified name or None if not found.
 
     def get_all_table(self):
+        """
+        Get a list of all table names in the database.
+        """
         return [table.table_name for table in self.database]
 
     def get_table_data(self, table_name):
+        """
+        Get the data of a specific table from the database.
+        """
         for table in self.database:
             if table.table_name == table_name:
                 return table.table
         return None
 
     def get_table_column(self, table_name):
+        """
+        Get the column names of a specific table from the database.
+        """
         for table in self.database:
             if table.table_name == table_name:
                 return list(table.table[0].keys())
+
 
 class Table:
     def __init__(self, table_name, table):
@@ -59,6 +85,9 @@ class Table:
         return joined_table
 
     def filter(self, condition):
+        """
+        Perform a filter operation based on a condition.
+        """
         filtered_table = Table(self.table_name + '_filtered', [])
         for item1 in self.table:
             if condition(item1):
@@ -72,6 +101,9 @@ class Table:
         return function(temps)
 
     def select(self, attributes_list):
+        """
+        Perform a select operation on specified attributes.
+        """
         temps = []
         for item1 in self.table:
             dict_temp = {}
@@ -82,14 +114,37 @@ class Table:
         return temps
 
     def insert_table(self, entry):
+        """
+        Insert a new entry into the table.
+        """
         self.table.append(entry)
 
     def update(self, check_key, check_val, check2_key, check2_val, key, new_value):
+        """
+        Update values in the table based on multiple conditions.
+
+        Parameters:
+        - check_key (str): The key for the first condition.
+        - check_val: The value for the first condition.
+        - check2_key (str): The key for the second condition.
+        - check2_val: The value for the second condition.
+        - key (str): The key to update.
+        - new_value: The new value.
+        """
         for data in self.table:
             if data[check_key] == check_val and data[check2_key] == check2_val:
                 data[key] = new_value
 
     def update2(self, check_key, check_val, key, new_value):
+        """
+        Update values in the table based on a single condition.
+
+        Parameters:
+        - check_key (str): The key for the condition.
+        - check_val: The value for the condition.
+        - key (str): The key to update.
+        - new_value: The new value.
+        """
         for data in self.table:
             if data[check_key] == check_val:
                 data[key] = new_value
