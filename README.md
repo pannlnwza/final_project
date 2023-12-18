@@ -41,7 +41,7 @@ These are all the **important** files that are needed to run the program. **If o
 ## How to use
 1. Clone this repository.
     ```bash
-    git clone https://github.com/your-username/your-project.git
+    git clone https://github.com/pannlnwza/final_project.git
     ```
 2. You must have all the files that is listed above.
 3. Run project_manage.py
