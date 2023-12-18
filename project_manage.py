@@ -101,47 +101,76 @@ class Student:
             print("You don't have any invitations yet.")
         return n
 
-    def respond_invitation(self, respond, project):
+    def respond_invitation(self):
         """
-        Respond to a group invitation (accept or deny).
+        Respond to advisor requests.
         """
-        if respond.lower() == 'accept':
-            for i in project_table.filter(lambda x: x['ProjectID'] == project).table:
-                if i['Member1'] == '-':  # Check if the group is full or not
-                    project_table.update('ProjectID', project, 'Member1', '-', 'Member1', self.id)
-                elif i['Member1'] != '-' and i['Member2'] == '-':
-                    project_table.update('ProjectID', project, 'Member2', '-', 'Member2', self.id)
-                else:
-                    print('This group is already full.')
-                    return
+        # Check if there is an invitation
+        check = student_user.see_invitation_req()  # Check if there is an invitation
+        if check == 0:
+            return
+        print()
+        print('Enter "BACK" if you want to go back to previous page!')
+        project = input('Which project do you want to respond? (Project ID): ')
+        if project.lower() == 'BACK':
+            return
+        response = input('What is your response? (accept/deny): ')
+        if response.lower() == 'back':
+            return
+        if member_pending:
+            for req in range(len(member_pending.filter(lambda x: x['ProjectID'] == project).table)):
+                if member_pending.filter(lambda x: x['ProjectID'] == project).table[req]['to_be_member'] == self.id:
+                    if response.lower() == 'accept':
+                        for i in project_table.filter(lambda x: x['ProjectID'] == project).table:
+                            if i['Member1'] == '-':  # Check if the group is full or not
+                                project_table.update('ProjectID', project, 'Member1', '-', 'Member1', self.id)
+                            elif i['Member1'] != '-' and i['Member2'] == '-':
+                                project_table.update('ProjectID', project, 'Member2', '-', 'Member2', self.id)
+                            else:
+                                print('This group is already full.')
+                                member_pending.update('ProjectID', project, 'to_be_member', self.id, 'Response',
+                                                      'Denied')
+                                member_pending.update('ProjectID', project, 'to_be_member', self.id, 'Response_date',
+                                                      datetime.today())
+                                save('member_pending_request')
+                                return
 
-            member_pending.update('ProjectID', project, 'to_be_member', self.id, 'Response', 'Accepted')
-            member_pending.update('ProjectID', project, 'to_be_member', self.id, 'Response_date', datetime.today())
-            save('member_pending_request')
+                        # Update member prending response
+                        member_pending.update('ProjectID', project, 'to_be_member', self.id, 'Response', 'Accepted')
+                        member_pending.update('ProjectID', project, 'to_be_member', self.id, 'Response_date',
+                                              datetime.today())
+                        save('member_pending_request')
 
-            other_group_invite = member_pending.filter(lambda x: x['ProjectID'] != project
-                                                       and x['to_be_member'] == self.id)
-            for i in range(len(other_group_invite.table)):  # Automatically deny other invitations
-                other_project_id = other_group_invite.table[i].get('ProjectID')
-                member_pending.update('ProjectID', other_project_id, 'to_be_member', self.id, 'Response', 'Denied')
-                member_pending.update('ProjectID', other_project_id, 'to_be_member',
-                                      self.id, 'Response_date', datetime.today())
-                save('member_pending_request')
+                        other_group_invite = member_pending.filter(lambda x: x['ProjectID'] != project
+                                                                   and x['to_be_member'] == self.id)
+                        for i in range(len(other_group_invite.table)):  # Automatically deny other invitations
+                            other_project_id = other_group_invite.table[i].get('ProjectID')
+                            member_pending.update('ProjectID', other_project_id, 'to_be_member', self.id, 'Response',
+                                                  'Denied')
+                            member_pending.update('ProjectID', other_project_id, 'to_be_member',
+                                                  self.id, 'Response_date', datetime.today())
+                            save('member_pending_request')
 
-            login_table.update('ID', self.id, 'username', self.user, 'role', 'member')
-            person_table.update2('ID', self.id, 'type', 'member')
-            save('login')
-            save('project')
-            save('persons')
-            self.role = 'member'
-            print(f'You have successfully joined the group ({project})')
-            print('Please Re-login. The program has to log out because the role changed.')
-            sys.exit()
-        elif respond.lower() == 'deny':
-            member_pending.update('ProjectID', project, 'to_be_member', self.id, 'Response', 'Denied')
-            member_pending.update('ProjectID', project, 'to_be_member', self.id, 'Response_date', datetime.today())
-            save('member_pending_request')
-            print('You have denied the invitation.')
+                        login_table.update('ID', self.id, 'username', self.user, 'role', 'member')
+                        person_table.update2('ID', self.id, 'type', 'member')
+                        save('login')
+                        save('project')
+                        save('persons')
+                        self.role = 'member'
+                        print(f'You have successfully joined the group ({project})')
+                        print('Please Re-login. The program has to log out because the role changed.')
+                        sys.exit()
+                    elif response.lower() == 'deny':
+                        member_pending.update('ProjectID', project, 'to_be_member', self.id, 'Response', 'Denied')
+                        member_pending.update('ProjectID', project, 'to_be_member', self.id, 'Response_date',
+                                              datetime.today())
+                        save('member_pending_request')
+                        print('You have denied the invitation.')
+
+                    else:
+                        print('Invalid choice. Please try again.')
+        else:
+            print('Member pending request table is not found.')
 
     def create_project(self):
         """
@@ -237,13 +266,20 @@ class Lead:
                 print(f'{key}: {value}')
 
     def send_invite_to_student(self):
-        """
+        """"
         Send an invitation to a student to join the project group.
         """
         print('Enter "BACK" if you want to go back to previous page!')
         new_member_id = input('Who do you want to invite?(ID): ')
-        if new_member_id == 'BACK':
-            return
+        while True:
+            if new_member_id == 'BACK':
+                return
+            if len(new_member_id) != 7:
+                print('This ID is invalid. Please enter a 7 letter ID.')
+                new_member_id = input('Who do you want to invite?(ID): ')
+            else:
+                break
+
         # User's project
         myproject = project_table.filter(lambda x: x['ProjectID'] == self.project_id).table
         # Check if the invited user is a student
@@ -255,7 +291,8 @@ class Lead:
         if new_member_id == self.id:
             print('You cannot invite yourself to the group.. But WHY??')
             return  # Return if you invited yourself
-        other_group = project_table.filter(lambda x: new_member_id in (x['Member1'], x['Member2'], x['Lead'])).table
+        other_group = project_table.filter(lambda x: str(new_member_id) in (str(x['Member1']), str(x['Member2']), str(x['Lead']))
+                                           and new_member_id not in (myproject[0]['Member1'], myproject[0]['Member2'])).table
         if other_group:
             print(f'This student (ID: {new_member_id}) is already a member of another group.')
             return  # Return if the invited user is already in another group
@@ -268,7 +305,7 @@ class Lead:
                 if new_member_id in (myproject[0]['Member1'], myproject[0]['Member2']):
                     print(f'This user (ID: {new_member_id}) is already in your group.')
                     return  # Return if the invited user is already in the group
-                if inv['to_be_member'] == new_member_id and inv['Response'] == '-':
+                if inv['to_be_member'] == new_member_id and inv['Response'] == 'Pending':
                     print(f'You already sent an invitation to this user (ID: {new_member_id}).')
                     return  # Return if this user is already invited
 
@@ -290,8 +327,14 @@ class Lead:
         """
         print('Enter "BACK" if you want to go back to previous page!')
         new_advisor_id = input('Who do you want to invite?(ID): ')
-        if new_advisor_id == 'BACK':
-            return
+        while True:
+            if new_advisor_id == 'BACK':
+                return
+            if len(new_advisor_id) != 7:
+                print('This ID is invalid. Please enter a 7 letter ID.')
+                new_advisor_id = input('Who do you want to invite?(ID): ')
+            else:
+                break
 
         check_faculty = login_table.filter(lambda x: x['ID'] == new_advisor_id).select('role')
         if check_faculty[0]['role'] != 'faculty':
@@ -311,7 +354,7 @@ class Lead:
                 if new_advisor_id == myproject[0]['Advisor']:
                     print(f'This user (ID: {new_advisor_id}) is already an advisor for this group.')
                     return  # Return if the invited user is already an advisor for this group
-                if inv['to_be_advisor'] == new_advisor_id and inv['Response'] == '-':
+                if inv['to_be_advisor'] == new_advisor_id and inv['Response'] == 'Pending':
                     print(f'You already sent an invitation to this user (ID: {new_advisor_id}).')
                     return  # Return if there's already an invitation sent to this user
 
@@ -402,50 +445,87 @@ class Faculty:
             print("You don't have any invitations yet.")
         return n
 
-    def advisor_respond_req(self, respond, project):
+    def advisor_respond_req(self):
         """
         Respond to advisor requests.
         """
-        if respond.lower() == 'accept':
-            for i in project_table.filter(lambda x: x['ProjectID'] == project).table:
-                if i['Advisor'] == '-':
-                    project_table.update('ProjectID', project, 'Advisor', '-', 'Advisor', self.id)
-                    save('project')
-                    advisor_pending.update('ProjectID', project, 'to_be_advisor', self.id, 'Response', 'Accepted')
-                    advisor_pending.update('ProjectID', project, 'to_be_advisor',
-                                           self.id, 'Response_date', datetime.today())
-                    save('advisor_pending_request')
+        # Check if there is an invitation
+        check = self.advisor_pending_req()
 
-                    other_group_invite = member_pending.filter(lambda x: x['ProjectID'] != project
-                                                               and x['to_be_advisor'] == self.id)
-                    for index in range(len(other_group_invite.table)):  # Automatically deny other invitations
-                        other_project_id = other_group_invite.table[i].get('ProjectID')
-                        advisor_pending.update('ProjectID', other_project_id, 'to_be_advisor', self.id, 'Response',
-                                               'Denied')
-                        advisor_pending.update('ProjectID', other_project_id, 'to_be_advisor', self.id, 'Response_date',
-                                               datetime.today())
+        # If there are no pending requests, exit
+        if check == 0:
+            return
+        print()
+        print('Enter "BACK" if you want to go back to the previous page!')
+
+        # Prompt the user to enter a project ID to respond to
+        project = input('Which project do you want to respond? (Project ID): ')
+        if project == 'BACK':   # If the user enters "BACK," exit the method
+            return
+        # Prompt the user to enter a response ("accept" or "deny")
+        response = input('What is your response? (accept/deny): ')
+        if response == 'BACK':  # If the user enters "BACK," exit the method
+            return
+
+        if advisor_pending:  # Check if the member_pending table exists
+            for req in range(len(advisor_pending.filter(lambda x: x['ProjectID'] == project).table)):
+                if advisor_pending.filter(lambda x: x['ProjectID'] == project).table[req]['to_be_advisor'] == \
+                        user_id[0]['ID']:
+                    # If the response is "accept"
+                    if response.lower() == 'accept':
+                        for i in project_table.filter(lambda x: x['ProjectID'] == project).table:
+                            # If the project has no assigned advisor, update the project advisor
+                            if i['Advisor'] == '-':
+                                project_table.update('ProjectID', project, 'Advisor', '-', 'Advisor', self.id)
+                                save('project')
+
+                                # Update advisor_pending table and log the user as the advisor
+                                advisor_pending.update('ProjectID', project, 'to_be_advisor', self.id,
+                                                       'Response', 'Accepted')
+                                advisor_pending.update('ProjectID', project, 'to_be_advisor', self.id,
+                                                       'Response_date', datetime.today())
+                                save('advisor_pending_request')
+
+                                # Automatically deny other invitations for different projects
+                                other_group_invite = member_pending.filter(
+                                    lambda x: x['ProjectID'] != project and x['to_be_advisor'] == self.id)
+                                for index in range(len(other_group_invite.table)):
+                                    other_project_id = other_group_invite.table[i].get('ProjectID')
+                                    advisor_pending.update('ProjectID', other_project_id, 'to_be_advisor', self.id,
+                                                           'Response', 'Denied')
+                                    advisor_pending.update('ProjectID', other_project_id, 'to_be_advisor', self.id,
+                                                           'Response_date', datetime.today())
+                                    save('advisor_pending_request')
+
+                                # Update login and person tables to reflect the user's new role as an advisor
+                                login_table.update('ID', self.id, 'username', self.user, 'role', 'advisor')
+                                person_table.update2('ID', self.id, 'type', 'advisor')
+                                save('login')
+                                save('persons')
+                                self.role = 'advisor'
+
+                                print('You have been assigned to be an advisor for this group.')
+                                print('Please Re-login. The program has to log out because the role changed.')
+                                sys.exit()
+
+                            elif i['Advisor'] != '-':   # If the group already has an advisor, deny the request
+                                print('This group already has an advisor.')
+                                advisor_pending.update('ProjectID', project, 'to_be_advisor', self.id, 'Response',
+                                                       'Denied')
+                                advisor_pending.update('ProjectID', project, 'to_be_advisor', self.id, 'Response_date',
+                                                       datetime.today())
+                                save('advisor_pending_request')
+                    # If the response is "deny," update the advisor_pending table accordingly
+                    elif response.lower() == 'deny':
+                        advisor_pending.update('ProjectID', project, 'to_be_advisor', self.id, 'Response', 'Denied')
+                        advisor_pending.update('ProjectID', project, 'to_be_advisor', self.id,
+                                               'Response_date',datetime.today())
                         save('advisor_pending_request')
-
-                    login_table.update('ID', self.id, 'username', self.user, 'role', 'advisor')
-                    person_table.update2('ID', self.id, 'type', 'advisor')
-                    save('login')
-                    save('persons')
-                    self.role = 'advisor'
-                    print('You have been assigned to be an advisor for this group.')
-                    print('Please Re-login. The program has to log out because the role changed.')
-                    sys.exit()
-                elif i['Advisor'] != '-':   # Check if the group already has an advisor
-                    print('This group already has an advisor.')
-                    advisor_pending.update('ProjectID', project, 'to_be_advisor', self.id, 'Response', 'Denied')
-                    advisor_pending.update('ProjectID', project, 'to_be_advisor',
-                                           self.id, 'Response_date', datetime.today())
-                    save('advisor_pending_request')
-
-        elif respond.lower() == 'deny':
-            advisor_pending.update('ProjectID', project, 'to_be_advisor', self.id, 'Response', 'Denied')
-            advisor_pending.update('ProjectID', project, 'to_be_advisor', self.id, 'Response_date', datetime.today())
-            save('advisor_pending_request')
-            print(f'You have denied to be an advisor for this group ({project}).')
+                        print(f'You have denied to be an advisor for this group ({project}).')
+                    else:
+                        print('Invalid choice. Please try again.')
+        else:
+            print('Member pending request table is not found.')
 
     def see_all_projects_details(self):
         """
@@ -482,11 +562,13 @@ class Faculty:
                 project_table.update2("ProjectID", choose_project, "Result", 'passed')
                 project_table.update2("ProjectID", choose_project, "Feedback", feedback)
                 save('project')
+                print(f'You have evaluated this project ({choose_project}).')
             elif result.lower() == "reject":
                 feedback = input('Feedback of the evaluation: ')
                 project_table.update2("ProjectID", choose_project, "Result", 'rejected')
                 project_table.update2("ProjectID", choose_project, "Feedback", feedback)
                 save('project')
+                print(f'You have evaluated this project ({choose_project}).')
         elif not project_table.filter(lambda x: x['Status'] == 'sent').filter(lambda x: x["Evaluator"] == '-').table:
             print('There is no project to evaluate.')
 
@@ -717,31 +799,8 @@ elif val[1] == 'student':
         if choice == '1':
             if member_pending:
                 student_user.see_invitation_req()
-            else:
-                print('Invalid choice. Please choose the valid choices (1,2,3 and 0)')
         elif choice == '2':
-            check = student_user.see_invitation_req()   # Check if there is an invitation
-            if check == 0:
-                continue
-            print()
-            print('Enter "BACK" if you want to go back to previous page!')
-            project_id = input('Which project do you want to respond? (Project ID): ')
-            if project_id.lower() == 'BACK':
-                continue
-            response = input('What is your response? (accept/deny): ')
-            if response.lower() == 'back':
-                continue
-            if member_pending:
-                for req in range(len(member_pending.filter(lambda x: x['ProjectID'] == project_id).table)):
-                    if member_pending.filter(lambda x: x['ProjectID'] == project_id).table[req]['to_be_member'] == user_id[0]['ID']:
-                        if response.lower() == 'accept':
-                            student_user.respond_invitation('accept', project_id)
-                        elif response.lower() == 'deny':
-                            student_user.respond_invitation('deny', project_id)
-                        else:
-                            print('Invalid choice. Please try again.')
-            else:
-                print('Member pending request table is not found.')
+            student_user.respond_invitation()
         elif choice == '3':
             student_user.create_project()
         elif choice == '0':
@@ -852,28 +911,7 @@ elif val[1] == 'faculty':
         if choice == '1':
             faculty_user.advisor_pending_req()
         elif choice == '2':
-            check = faculty_user.advisor_pending_req()  # Check if there is an invitation
-            if check == 0:
-                continue
-            print()
-            print('Enter "BACK" if you want to go back to previous page!')
-            project_id = input('Which project do you want to respond? (Project ID): ')
-            if project_id == 'BACK':
-                continue
-            response = input('What is your response? (accept/deny): ')
-            if response == 'BACK':
-                continue
-            if member_pending:
-                for req in range(len(advisor_pending.filter(lambda x: x['ProjectID'] == project_id).table)):
-                    if advisor_pending.filter(lambda x: x['ProjectID'] == project_id).table[req]['to_be_advisor'] == user_id[0]['ID']:
-                        if response.lower() == 'accept':
-                            faculty_user.advisor_respond_req('accept', project_id)
-                        elif response.lower() == 'deny':
-                            faculty_user.advisor_respond_req('deny', project_id)
-                        else:
-                            print('Invalid choice. Please try again.')
-            else:
-                print('Member pending request table is not found.')
+            faculty_user.advisor_respond_req()
         elif choice == '3':
             faculty_user.see_all_projects_details()
         elif choice == '4':
