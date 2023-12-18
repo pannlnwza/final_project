@@ -38,6 +38,13 @@ These are all the **important** files that are needed to run the program. **If o
    - advisor_pending_request.csv: This CSV file will store the data of advisor invitations.
 
 
+## How to use
+1. You must have all the files that is listed above.
+2. Run project_manage.py
+3. Log in. Your role will be based on the role in persons table and login table.
+4. After you login there will be a menu popping up based on your role.
+
+
 ## Interactions
 - Every `student` can create a project group, after creating the role will change to `lead`.
 - `Lead` can invite other `student` to be the member of the group. A `lead` can invite max of 2 members (not including lead).
