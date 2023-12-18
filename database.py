@@ -44,29 +44,6 @@ class DB:
                 return table
         return None    # Returns the table with the specified name or None if not found.
 
-    def get_all_table(self):
-        """
-        Get a list of all table names in the database.
-        """
-        return [table.table_name for table in self.database]
-
-    def get_table_data(self, table_name):
-        """
-        Get the data of a specific table from the database.
-        """
-        for table in self.database:
-            if table.table_name == table_name:
-                return table.table
-        return None
-
-    def get_table_column(self, table_name):
-        """
-        Get the column names of a specific table from the database.
-        """
-        for table in self.database:
-            if table.table_name == table_name:
-                return list(table.table[0].keys())
-
 
 class Table:
     def __init__(self, table_name, table):
