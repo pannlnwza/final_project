@@ -1,5 +1,4 @@
-# Project Management System
-
+# Project Management
 ## Files and Descriptions
 These are all the **important** files that are needed to run the program. **If one of these files are missing the program will not run properly.**
 
