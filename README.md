@@ -4,15 +4,14 @@
 These are all the **important** files that are needed to run the program. **If one of these files are missing the program will not run properly.**
 
 1. **database.py**
-   - Contains classes for handling database operations.
-      - **CSVReader**: Reads CSV files and returns the data as a list of dictionaries.
-        - `read_csv`: Read data from the CSV file and convert it into a list of dictionaries.
+      - **CSVReader**: Class for reading CSV files
+        - `read_csv`: Read data from the CSV file and convert it into a list of dict.
 
-      - **DB**: Represents the main database, which stores tables.
+      - **DB**: Class that contain database
         - `insert`: Insert a table into the database.
         - `search`: Search for a table in the database based on its name.
         
-      - **Table**: Represents a table with various methods for manipulation:
+      - **Table**: Represents a table
         - `join`: Joins two tables based on a common key.
         - `filter`: Filters the table based on a given condition.
         - `select`: Selects specific attributes from the table.
@@ -23,8 +22,7 @@ These are all the **important** files that are needed to run the program. **If o
 
 2. **project_manage.py**
    - Defines functions for initializing and then saving to the main database.
-   - Manages tables for login, persons, member_pending_request, advisor_pending_request, and project.
-   - Contains class definitions for various roles in the system:
+   - Classes for role-based activities
      - `Admin`: Represents an admin in the system.  
      - `Faculty`: Represents a faculty member in the system.
      - `Advisor`: Represents an advisor in the system.
