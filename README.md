@@ -39,10 +39,14 @@ These are all the **important** files that are needed to run the program. **If o
 
 
 ## How to use
-1. You must have all the files that is listed above.
-2. Run project_manage.py
-3. Log in. Your role will be based on the role in persons table and login table.
-4. After you login there will be a menu popping up based on your role.
+1. Clone this repository.
+    ```bash
+    git clone https://github.com/your-username/your-project.git
+    ```
+2. You must have all the files that is listed above.
+3. Run project_manage.py
+4. Log in. Your role will be based on the role in persons table and login table.
+5. After you login there will be a menu popping up based on your role.
 
 
 ## Interactions
