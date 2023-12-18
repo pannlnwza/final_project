@@ -38,21 +38,6 @@ These are all the **important** files that are needed to run the program. **If o
    - advisor_pending_request.csv: This CSV file will store the data of advisor invitations.
 
 
-
-## Execution
-
-1. Clone the repository:
-
-    ```bash
-    git clone https://github.com/pannlnwza/final_project.git
-    ```
-
-2. Run the main program: (project_manage.py)
-
-    ```bash
-    python project_manage.py
-    ```
-
 ## Interactions
 - Every `student` can create a project group, after creating the role will change to `lead`.
 - `Lead` can invite other `student` to be the member of the group. A `lead` can invite max of 2 members (not including lead).
